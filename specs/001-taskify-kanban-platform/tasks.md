@@ -155,3 +155,13 @@ Two services per plan.md: `services/api/` (FastAPI + SQLite) and `services/web/`
 - **MVP**: Phases 1-3 (view seeded boards), then add US2 for the core Kanban value.
 - Deliver incrementally: US2, US3, US4, then US5; validate each with its quickstart scenarios before moving on.
 - Phase 1 is a documented, time-boxed no-login exception (constitution v1.1.0); T049-T050 and T047 keep its conditions evidenced.
+
+## Phase 9: Convergence
+
+- [ ] T053 Add a web test in `services/web/tests/test_live_updates.py` that simulates a dropped SSE stream and asserts the full board is re-fetched on reconnect, and verify the `board.js` reconnect state in a browser per FR-014 (partial)
+- [ ] T054 Verify `board.js` drag-and-drop, keyboard "Move to" menu and move-on-drop in a real browser, and add rollback-on-error handling for failed moves per US2 / T029 (partial)
+- [X] T055 Add `services/web/tests/` coverage for the task dialog, comments display order, and notification list ordering/unread styling that currently has only API-level tests per FR-009, FR-016 (partial)
+- [X] T056 Add the SC-006 five-concurrent-subscriber timing check for live events and a 100-task board web render test per SC-006 (partial)
+- [X] T057 Add missing docstrings to `check` in `services/api/app/schemas.py` and the `decorator`/`wrapper` in `services/web/boards/views.py` per Constitution IV (partial)
+- [ ] T058 Run the manual quickstart walkthrough with both services live (timed SC-001..SC-003, two-browser live update and notifications) and record results in quickstart.md per SC-001, SC-002, SC-003 (missing)
+- [ ] T059 Define a sample size and method for SC-004 usability measurement and record the result per SC-004 (missing)

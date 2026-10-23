@@ -114,3 +114,14 @@ def test_failed_change_publishes_nothing(live):
         c.post("/projects/1/tasks", json={"title": ""}, headers=_h(2))
     with pytest.raises(AssertionError):
         sub.wait_for("task_created", timeout=0.5)
+
+
+def test_five_concurrent_subscribers_all_receive_within_two_seconds(live):
+    """SC-006: five users watching at once all see a change within 2 seconds."""
+    subs = [Subscriber(live) for _ in range(5)]
+    with httpx.Client(base_url=f"{live}/api/v1") as c:
+        t0 = time.monotonic()
+        c.post("/projects/1/tasks", json={"title": "fanout"}, headers=_h(1))
+        for sub in subs:
+            _, ts = sub.wait_for("task_created")
+            assert ts - t0 < 2
