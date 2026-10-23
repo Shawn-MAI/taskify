@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{% block title %}Taskify{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'boards/board.css' %}">
+</head>
+<body{% if current_user_id %} data-user-id="{{ current_user_id }}"{% endif %}>
+  <header class="topbar">
+    <a class="brand" href="{% url 'projects' %}">Taskify</a>
+    {% if current_user_id %}
+      <nav>
+        <a href="{% url 'projects' %}">Projects</a>
+        <a href="{% url 'notifications' %}">Notifications
+          <span id="unread-badge" class="badge{% if not unread_count %} hidden{% endif %}">{{ unread_count }}</span>
+        </a>
+        <span class="who">Acting as <strong>{{ current_user_name }}</strong> (<a href="{% url 'users' %}">switch</a>)</span>
+      </nav>
+    {% endif %}
+  </header>
+  <p id="connection-status" class="status hidden" role="status">Reconnecting&hellip;</p>
+  <main>{% block content %}{% endblock %}</main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

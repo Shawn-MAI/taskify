@@ -1,0 +1,10 @@
+taskify.example.com {
+	encode gzip
+	# SSE needs unbuffered streaming
+	reverse_proxy /api/* 127.0.0.1:8001 {
+		flush_interval -1
+	}
+	reverse_proxy 127.0.0.1:8000 {
+		flush_interval -1
+	}
+}

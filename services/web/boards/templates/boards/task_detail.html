@@ -1,0 +1,17 @@
+<dialog id="task-dialog" aria-labelledby="task-dialog-title">
+  <button type="button" id="task-dialog-close" class="close" aria-label="Close">&times;</button>
+  <h2 id="task-dialog-title"></h2>
+  <p id="task-dialog-description" class="note"></p>
+  <p>Assignee:
+    <select id="task-dialog-assignee" aria-label="Assignee"></select>
+  </p>
+  <p id="task-dialog-error" class="error hidden" role="alert"></p>
+  <h3>Comments</h3>
+  <ul id="task-comments" class="comments"></ul>
+  <form id="comment-form" class="stack">
+    <label>Add a comment <textarea id="comment-body" rows="3" maxlength="4000"></textarea></label>
+    <button type="submit">Comment</button>
+  </form>
+  <h3>Recent activity</h3>
+  <ul id="task-activity" class="activity"></ul>
+</dialog>

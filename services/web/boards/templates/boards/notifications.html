@@ -1,0 +1,19 @@
+{% extends "boards/base.html" %}
+{% load static %}
+{% block title %}Notifications - Taskify{% endblock %}
+{% block content %}
+<h1>Notifications</h1>
+{% if not notifications %}<p class="note">You have no notifications.</p>{% endif %}
+<ul id="notification-list" class="notifications">
+  {% for n in notifications %}
+  <li class="notification {% if n.read %}read{% else %}unread{% endif %}" data-notification-id="{{ n.id }}">
+    <span class="msg">{{ n.message }}</span>
+    <time datetime="{{ n.created_at }}">{{ n.created_at }}</time>
+    {% if n.read %}<span class="state">Read</span>{% else %}
+    <form method="post" action="{% url 'notification_read' n.id %}">{% csrf_token %}<button type="submit" data-mark-read>Mark as read</button></form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
+{% block scripts %}<script src="{% static 'boards/board.js' %}" defer></script>{% endblock %}

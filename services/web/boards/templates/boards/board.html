@@ -1,0 +1,51 @@
+{% extends "boards/base.html" %}
+{% load static %}
+{% block title %}{{ project.name }} - Taskify{% endblock %}
+{% block content %}
+<h1>{{ project.name }}</h1>
+{% if project.description %}<p class="note">{{ project.description }}</p>{% endif %}
+
+<details class="new-task"{% if error %} open{% endif %}>
+  <summary>New task</summary>
+  {% if error %}<p class="error" role="alert" data-field="{{ error_field|default_if_none:'' }}">{{ error }}</p>{% endif %}
+  <form method="post" action="{% url 'task_create' project.id %}" class="stack">
+    {% csrf_token %}
+    <label>Title <input name="title" value="{{ form.title }}" maxlength="400" required></label>
+    <label>Description (optional) <textarea name="description" rows="2">{{ form.description }}</textarea></label>
+    <label>Assignee
+      <select name="assignee_id">
+        <option value="">Unassigned</option>
+        {% for person in people %}<option value="{{ person.id }}">{{ person.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="submit">Create task</button>
+  </form>
+</details>
+
+<div id="board" class="board" data-project-id="{{ project.id }}">
+  {% for col in columns %}
+  <section class="column" data-status="{{ col.key }}" aria-label="{{ col.label }}">
+    <h2>{{ col.label }} <span class="count">{{ col.tasks|length }}</span></h2>
+    <ul class="cards">
+      {% for t in col.tasks %}
+      <li class="card" draggable="true" data-task-id="{{ t.id }}">
+        <button type="button" class="card-title" data-open-task="{{ t.id }}">{{ t.title }}</button>
+        <span class="assignee{% if not t.assignee_name %} none{% endif %}">{% if t.assignee_name %}{{ t.assignee_name }}{% else %}Unassigned{% endif %}</span>
+        <label class="move">Move to
+          <select data-move-task="{{ t.id }}">
+            {% for key, label in column_options %}<option value="{{ key }}"{% if key == col.key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+      </li>
+      {% empty %}
+      <li class="empty">No tasks</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+
+{% include "boards/task_detail.html" %}
+{{ people|json_script:"people-data" }}
+{% endblock %}
+{% block scripts %}<script src="{% static 'boards/board.js' %}" defer></script>{% endblock %}

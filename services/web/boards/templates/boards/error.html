@@ -1,0 +1,7 @@
+{% extends "boards/base.html" %}
+{% block title %}Problem - Taskify{% endblock %}
+{% block content %}
+<h1>Something went wrong</h1>
+<p class="error" role="alert">{{ message }}</p>
+<p><a href="{% url 'projects' %}">Back to projects</a></p>
+{% endblock %}

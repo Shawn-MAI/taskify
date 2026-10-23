@@ -1,0 +1,18 @@
+{% extends "boards/base.html" %}
+{% block title %}Projects - Taskify{% endblock %}
+{% block content %}
+<h1>Projects</h1>
+<ul class="project-list">
+  {% for p in projects %}
+    <li><a href="{% url 'board' p.id %}">{{ p.name }}</a>{% if p.description %}<span class="desc">{{ p.description }}</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+<h2>New project</h2>
+{% if error %}<p class="error" role="alert" data-field="{{ error_field|default_if_none:'' }}">{{ error }}</p>{% endif %}
+<form method="post" action="{% url 'project_create' %}" class="stack">
+  {% csrf_token %}
+  <label>Name <input name="name" value="{{ form.name }}" maxlength="200" required></label>
+  <label>Description (optional) <textarea name="description" rows="2">{{ form.description }}</textarea></label>
+  <button type="submit">Create project</button>
+</form>
+{% endblock %}

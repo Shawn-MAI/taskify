@@ -1,0 +1,203 @@
+openapi: 3.0.3
+info:
+  title: Taskify API
+  version: 1.0.0
+  description: >
+    REST contract for the Taskify API service. Every request except /health
+    requires the service token (Authorization Bearer) and X-Acting-User
+    (id of the selected predefined user). All input is validated server-side;
+    invalid input returns 422 with a message and changes no data.
+servers:
+  - url: /api/v1
+security:
+  - serviceToken: []
+paths:
+  /users:
+    get:
+      summary: List the five predefined users
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/User" } } } } }
+  /projects:
+    get:
+      summary: List projects
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Project" } } } } }
+    post:
+      summary: Create a project
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/ProjectCreate" } } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } } }
+        "409": { description: Duplicate name }
+        "422": { description: Validation error }
+  /projects/{projectId}:
+    get:
+      summary: Get a project with its board (tasks grouped by status)
+      parameters: [ { $ref: "#/components/parameters/projectId" } ]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Board" } } } }
+        "404": { description: Not found }
+  /projects/{projectId}/tasks:
+    post:
+      summary: Create a task (starts in todo)
+      parameters: [ { $ref: "#/components/parameters/projectId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/TaskCreate" } } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+        "404": { description: Project or assignee not found }
+        "422": { description: Validation error }
+  /tasks/{taskId}:
+    get:
+      summary: Get a task with its comments
+      parameters: [ { $ref: "#/components/parameters/taskId" } ]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/TaskDetail" } } } }
+        "404": { description: Not found }
+  /tasks/{taskId}/status:
+    put:
+      summary: Move a task to a column
+      parameters: [ { $ref: "#/components/parameters/taskId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/StatusChange" } } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+        "404": { description: Not found }
+        "422": { description: Validation error }
+  /tasks/{taskId}/assignee:
+    put:
+      summary: Assign, reassign, or clear (null) the assignee
+      parameters: [ { $ref: "#/components/parameters/taskId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/AssigneeChange" } } } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+        "404": { description: Task or user not found }
+        "422": { description: Validation error }
+  /tasks/{taskId}/comments:
+    post:
+      summary: Add a comment
+      parameters: [ { $ref: "#/components/parameters/taskId" } ]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CommentCreate" } } } }
+      responses:
+        "201": { description: Created, content: { application/json: { schema: { $ref: "#/components/schemas/Comment" } } } }
+        "404": { description: Not found }
+        "422": { description: Validation error }
+  /notifications:
+    get:
+      summary: List notifications for the acting user (newest first)
+      parameters:
+        - { name: unread, in: query, required: false, schema: { type: boolean } }
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Notification" } } } } }
+  /notifications/{notificationId}/read:
+    post:
+      summary: Mark a notification as read (only the recipient)
+      parameters: [ { name: notificationId, in: path, required: true, schema: { type: integer } } ]
+      responses:
+        "200": { description: OK, content: { application/json: { schema: { $ref: "#/components/schemas/Notification" } } } }
+        "404": { description: Not found }
+  /events:
+    get:
+      summary: Server-Sent Events stream (task_created, task_moved, task_assigned, comment_added, notification_created)
+      responses:
+        "200": { description: text/event-stream }
+  /health:
+    get:
+      summary: Health check (no auth)
+      security: []
+      responses:
+        "200": { description: OK }
+components:
+  securitySchemes:
+    serviceToken: { type: http, scheme: bearer }
+  parameters:
+    projectId: { name: projectId, in: path, required: true, schema: { type: integer } }
+    taskId: { name: taskId, in: path, required: true, schema: { type: integer } }
+  schemas:
+    Status: { type: string, enum: [todo, in_progress, in_review, done] }
+    User:
+      type: object
+      properties: { id: { type: integer }, name: { type: string }, role: { type: string, enum: [product_manager, engineer] } }
+    Project:
+      type: object
+      properties: { id: { type: integer }, name: { type: string }, description: { type: string, nullable: true }, created_by: { type: integer }, created_at: { type: string, format: date-time } }
+    ProjectCreate:
+      type: object
+      required: [name]
+      additionalProperties: false
+      properties: { name: { type: string, minLength: 1, maxLength: 100 }, description: { type: string, maxLength: 1000 } }
+    Task:
+      type: object
+      properties:
+        id: { type: integer }
+        project_id: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/Status" }
+        position: { type: integer }
+        assignee_id: { type: integer, nullable: true }
+        created_by: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    TaskCreate:
+      type: object
+      required: [title]
+      additionalProperties: false
+      properties: { title: { type: string, minLength: 1, maxLength: 150 }, description: { type: string, maxLength: 2000 }, assignee_id: { type: integer, nullable: true } }
+    TaskDetail:
+      allOf:
+        - $ref: "#/components/schemas/Task"
+        - type: object
+          properties:
+            comments: { type: array, items: { $ref: "#/components/schemas/Comment" } }
+            activity:
+              description: Most recent 20 activity records, newest first
+              type: array
+              maxItems: 20
+              items: { $ref: "#/components/schemas/Activity" }
+    Activity:
+      type: object
+      properties:
+        id: { type: integer }
+        task_id: { type: integer }
+        actor_id: { type: integer }
+        action: { type: string, enum: [created, moved, assigned, unassigned, commented] }
+        from_value: { type: string, nullable: true, description: "Previous status or assignee id; null when not applicable" }
+        to_value: { type: string, nullable: true, description: "New status or assignee id; null when not applicable" }
+        created_at: { type: string, format: date-time }
+    Board:
+      type: object
+      properties:
+        project: { $ref: "#/components/schemas/Project" }
+        columns:
+          type: object
+          properties:
+            todo: { type: array, items: { $ref: "#/components/schemas/Task" } }
+            in_progress: { type: array, items: { $ref: "#/components/schemas/Task" } }
+            in_review: { type: array, items: { $ref: "#/components/schemas/Task" } }
+            done: { type: array, items: { $ref: "#/components/schemas/Task" } }
+    StatusChange:
+      type: object
+      required: [status]
+      additionalProperties: false
+      properties: { status: { $ref: "#/components/schemas/Status" }, position: { type: integer, minimum: 0 } }
+    AssigneeChange:
+      type: object
+      required: [assignee_id]
+      additionalProperties: false
+      properties: { assignee_id: { type: integer, nullable: true } }
+    CommentCreate:
+      type: object
+      required: [body]
+      additionalProperties: false
+      properties: { body: { type: string, minLength: 1, maxLength: 2000 } }
+    Comment:
+      type: object
+      properties: { id: { type: integer }, task_id: { type: integer }, author_id: { type: integer }, body: { type: string }, created_at: { type: string, format: date-time } }
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [task_assigned, task_commented] }
+        task_id: { type: integer }
+        actor_id: { type: integer }
+        message: { type: string }
+        read: { type: boolean }
+        created_at: { type: string, format: date-time }

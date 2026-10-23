@@ -1,0 +1,23 @@
+name: ci
+on: [push, pull_request]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r services/api/requirements.txt pytest pip-audit
+      - run: cd services/api && python -m pytest -q
+      - run: pip-audit -r services/api/requirements.txt
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r services/api/requirements.txt -r services/web/requirements-test.txt pip-audit
+      - run: cd services/web && python -m pytest -q
+      - run: pip-audit -r services/web/requirements.txt

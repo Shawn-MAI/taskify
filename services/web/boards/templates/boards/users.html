@@ -1,0 +1,16 @@
+{% extends "boards/base.html" %}
+{% block title %}Choose a user - Taskify{% endblock %}
+{% block content %}
+<h1>Who are you?</h1>
+<p class="note">There is no login in this phase. Pick the team member you are acting as. This is a convenience, not a security boundary.</p>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form method="post" action="{% url 'users' %}" class="user-list">
+  {% csrf_token %}
+  {% for person in people %}
+    <button type="submit" name="user_id" value="{{ person.id }}" class="user-choice">
+      <span class="name">{{ person.name }}</span>
+      <span class="role">{% if person.role == "product_manager" %}Product manager{% else %}Engineer{% endif %}</span>
+    </button>
+  {% endfor %}
+</form>
+{% endblock %}
