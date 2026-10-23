@@ -29,6 +29,7 @@ def _text(label: str, lo: int, hi: int, optional: bool = False) -> BeforeValidat
     """
 
     def check(value: Any) -> Any:
+        """Trim ``value`` and raise ``ValueError`` if it is not text of the allowed length."""
         if value is None and optional:
             return None
         if not isinstance(value, str):

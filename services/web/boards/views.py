@@ -49,8 +49,11 @@ def requires_user(wants_json: bool = False) -> Callable:
     """
 
     def decorator(view: Callable) -> Callable:
+        """Wrap ``view`` with the session-user check."""
+
         @wraps(view)
         def wrapper(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+            """Run the view only when a user has been chosen."""
             if request.session.get("user_id") is None:
                 if wants_json:
                     return JsonResponse({"error": "Choose a user first."}, status=401)
